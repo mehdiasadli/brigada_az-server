@@ -1,0 +1,287 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  first_name    String
+  last_name     String
+  username      String   @unique
+  email         String   @unique
+  password      String
+  avatar        String?
+  bio           String?
+  date_of_birth DateTime
+
+  roles     Role[]     @default([MEMBER])
+  positions Position[]
+
+  played Player[]
+  Post   Post[]
+
+  comments      Comment[]
+  likes         Like[]
+  polls         Poll[]
+  votes         PollVote[]
+  events        Event[]
+  participation EventParticipant[]
+  followed_by   Followship[]       @relation("Follower")
+  following     Followship[]       @relation("Following")
+  notifications Notification[]
+  activities    Activity[]
+  games         Game[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([email])
+  @@index([first_name, last_name])
+  @@index([username])
+}
+
+model Player {
+  id String @id @default(uuid())
+
+  is_capitan Boolean @default(false)
+  team       String
+  goals      Int     @default(0)
+
+  userId     String?
+  user       User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gameId     String
+  game       Game    @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  first_name String
+  last_name  String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Game {
+  id String @id @default(uuid())
+
+  starts_at   DateTime
+  ends_at     DateTime?
+  location    String
+  info        String?
+  result      Int[]     @default([0, 0])
+  is_finished Boolean   @default(false)
+  gallery     String[]
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  players Player[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Post {
+  id      String  @id @default(uuid())
+  content String
+  image   String?
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  comments   Comment[]
+  likes      Like[]
+  activities Activity[]
+
+  @@index([authorId])
+  @@index([content])
+}
+
+model Comment {
+  id String @id @default(uuid())
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  postId   String
+  post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  parentId String?
+  parent   Comment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies  Comment[] @relation("CommentReplies")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([postId])
+  @@index([authorId])
+}
+
+model Like {
+  id String @id @default(uuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+
+  @@unique([userId, postId])
+  @@index([postId])
+}
+
+model Poll {
+  id       String    @id @default(uuid())
+  question String
+  options  String[]
+  endDate  DateTime?
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  votes PollVote[]
+
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  activities Activity[]
+
+  @@index([authorId])
+  @@index([question])
+}
+
+model PollVote {
+  id          String @id @default(uuid())
+  optionIndex Int
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  pollId String
+  poll   Poll   @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+
+  @@unique([userId, pollId])
+  @@index([pollId])
+}
+
+model Event {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  start_date  DateTime
+  end_date    DateTime
+  location    String?
+
+  organizerId String
+  organizer   User   @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+
+  participants EventParticipant[]
+
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+  activites  Activity[]
+
+  @@index([organizerId])
+  @@index([start_date])
+}
+
+model EventParticipant {
+  id     String              @id @default(uuid())
+  status ParticipationStatus
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([userId, eventId])
+  @@index([eventId])
+}
+
+model Followship {
+  id String @id @default(uuid())
+
+  followerId String
+  follower   User   @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+
+  followingId String
+  following   User   @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followingId])
+}
+
+model Notification {
+  id      String           @id @default(uuid())
+  type    NotificationType
+  content String
+  is_read Boolean          @default(false)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+
+  @@index([userId])
+  @@index([created_at])
+}
+
+model Activity {
+  id String @id @default(uuid())
+
+  type ActivityType
+
+  post  Post?  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  poll  Poll?  @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  event Event? @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  postId  String?
+  pollId  String?
+  eventId String?
+}
+
+enum ActivityType {
+  POST
+  POLL
+  EVENT
+}
+
+enum NotificationType {
+  LIKE
+  COMMENT
+  FOLLOW
+  EVENT_INVITATION
+  POLL_CREATED
+}
+
+enum ParticipationStatus {
+  GOING
+  MAYBE
+  NOT_GOING
+}
+
+enum Position {
+  GOALKEEPER
+  DEFENDER
+  MIDFIELDER
+  FORWARD
+}
+
+enum Role {
+  MEMBER
+  MODERATOR
+  ADMIN
+}
