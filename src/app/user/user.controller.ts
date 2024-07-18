@@ -29,6 +29,12 @@ export class UserController {
     return await this.userService.findById(id);
   }
 
+  @Auth()
+  @Get('profile/:username')
+  async getProfile(@Param("username") username: string) {
+    return await this.userService.getProfile(username)
+  }
+
   @Put(':id')
   @Auth()
   async update(

@@ -4,7 +4,7 @@ export function extractTokenFromHeaders(
   headers: IncomingHttpHeaders,
   key = 'Authorization',
 ): string | null {
-  const token = headers[key];
+  const token = headers[key] || headers[key.toLowerCase()];
 
   if (!token) return null;
   if (typeof token !== 'string') return null;

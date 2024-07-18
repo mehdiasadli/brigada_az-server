@@ -22,7 +22,7 @@ model User {
   positions Position[]
 
   played Player[]
-  Post   Post[]
+  posts  Post[]
 
   comments      Comment[]
   likes         Like[]
@@ -89,11 +89,12 @@ model Post {
   authorId String
   author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
-  created_at DateTime   @default(now())
-  updated_at DateTime   @updatedAt
   comments   Comment[]
   likes      Like[]
   activities Activity[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@index([authorId])
   @@index([content])
@@ -102,6 +103,7 @@ model Post {
 model Comment {
   id String @id @default(uuid())
 
+  content  String
   authorId String
   author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
   postId   String
