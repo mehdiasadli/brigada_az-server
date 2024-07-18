@@ -54,7 +54,12 @@ export class CommentService {
     });
 
     return {
-      meta: getPaginationInfo(total, comments, pagination.page, pagination.limit),
+      meta: getPaginationInfo(
+        total,
+        comments,
+        pagination.page,
+        pagination.limit,
+      ),
       data: comments,
     };
   }

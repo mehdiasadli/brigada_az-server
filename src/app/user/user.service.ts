@@ -14,7 +14,7 @@ import { publicUserForPost } from 'src/lib/utils/publicUser';
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async search(query?: String) {
+  async search(query?: string) {
     if (!query) return [];
 
     return await this.prisma.user.findMany({

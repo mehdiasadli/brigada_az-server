@@ -12,8 +12,7 @@ import { PostService } from './post.service';
 import { Zod } from 'src/lib/pipes/zod.pipe';
 import { CreatePostDto, TCreatePostDto } from './dto/create-post.dto';
 import { UserId } from 'src/lib/decorators/user.decorator';
-import { IncomingQueryParams, queryParser } from 'src/lib/utils/queryParser';
-import { Post as IPost } from '@prisma/client';
+import { IncomingQueryParams } from 'src/lib/utils/queryParser';
 
 @Controller('posts')
 export class PostController {

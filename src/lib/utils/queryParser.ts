@@ -90,7 +90,7 @@ export function queryParser<T extends object>(
   return result as QueryParams<T>;
 }
 
-type PrismaQueries<T extends object = any> = {
+type PrismaQueries = {
   orderBy: {
     [field: string]: OrderDir;
   };
@@ -104,7 +104,7 @@ type PrismaQueries<T extends object = any> = {
 };
 
 export function queryHandler<T extends object>(query: QueryParams<T>) {
-  const result: Partial<PrismaQueries<T>> = {};
+  const result: Partial<PrismaQueries> = {};
 
   result.orderBy = {
     [query.order.by]: query.order.dir,
@@ -165,8 +165,8 @@ export function queryHandler<T extends object>(query: QueryParams<T>) {
     orderBy,
     pagination,
   } as {
-    where: Required<PrismaQueries<T>['where']>;
-    orderBy: PrismaQueries<T>['orderBy'];
+    where: Required<PrismaQueries['where']>;
+    orderBy: PrismaQueries['orderBy'];
     pagination?:
       | {
           page: number;
