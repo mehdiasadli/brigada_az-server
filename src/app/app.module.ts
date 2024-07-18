@@ -9,6 +9,7 @@ import { PostModule } from './post/post.module';
 import { LikeModule } from './like/like.module';
 import { CommentModule } from './comment/comment.module';
 import { CommonModule } from './common/common.module';
+import { FollowshipModule } from './followship/followship.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { CommonModule } from './common/common.module';
     PostModule,
     LikeModule,
     CommentModule,
+    FollowshipModule,
   ],
   providers: [
     {

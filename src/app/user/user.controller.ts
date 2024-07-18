@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Put,
+  Query,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, TCreateUserDto } from './dto/create-user.dto';
@@ -23,6 +24,12 @@ export class UserController {
     return await this.userService.create(createUserDto);
   }
 
+  @Auth()
+  @Get('search')
+  async search(@Query('query') query: string) {
+    return await this.userService.search(query);
+  }
+
   @Get(':id')
   @Auth()
   async findOne(@Param('id') id: string) {
@@ -31,8 +38,8 @@ export class UserController {
 
   @Auth()
   @Get('profile/:username')
-  async getProfile(@Param("username") username: string) {
-    return await this.userService.getProfile(username)
+  async getProfile(@Param('username') username: string) {
+    return await this.userService.getProfile(username);
   }
 
   @Put(':id')

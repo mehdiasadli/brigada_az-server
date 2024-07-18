@@ -8,10 +8,42 @@ import { TUpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from 'src/app/prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { User } from '@prisma/client';
+import { publicUserForPost } from 'src/lib/utils/publicUser';
 
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
+
+  async search(query?: String) {
+    if (!query) return [];
+
+    return await this.prisma.user.findMany({
+      where: {
+        OR: [
+          {
+            username: {
+              contains: query as any,
+              mode: 'insensitive',
+            },
+          },
+          {
+            first_name: {
+              contains: query as any,
+              mode: 'insensitive',
+            },
+          },
+          {
+            last_name: {
+              contains: query as any,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      },
+      select: publicUserForPost,
+      take: 8,
+    });
+  }
 
   async getProfile(username: string) {
     const user = await this.prisma.user.findUnique({
@@ -19,6 +51,11 @@ export class UserService {
         username,
       },
       include: {
+        followed_by: {
+          select: {
+            followerId: true,
+          },
+        },
         _count: {
           select: {
             posts: true,
@@ -80,6 +117,7 @@ export class UserService {
       created_at: user.created_at,
       email: user.email,
       date_of_birth: user.date_of_birth,
+      positions: user.positions,
     };
   }
 
@@ -103,18 +141,27 @@ export class UserService {
   }
 
   async update(id: string, updateUserDto: TUpdateUserDto) {
+    const user = await this.findById(id);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
     if (updateUserDto.email) {
-      if (await this.findByEmail(updateUserDto.email)) {
+      if (
+        (await this.findByEmail(updateUserDto.email)) &&
+        updateUserDto.email !== user.email
+      ) {
         throw new ConflictException('Email already in use');
       }
     }
 
-    const user = await this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id },
       data: updateUserDto,
     });
 
-    return this.json(user);
+    return this.json(updated);
   }
 
   async remove(id: string) {

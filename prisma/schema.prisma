@@ -30,8 +30,8 @@ model User {
   votes         PollVote[]
   events        Event[]
   participation EventParticipant[]
-  followed_by   Followship[]       @relation("Follower")
-  following     Followship[]       @relation("Following")
+  followed_by   Followship[]       @relation("Following")
+  following     Followship[]       @relation("Follower")
   notifications Notification[]
   activities    Activity[]
   games         Game[]

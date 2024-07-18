@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TCreatePostDto } from './dto/create-post.dto';
 import {
@@ -97,13 +97,37 @@ export class PostService {
     };
   }
 
-  async feed(query?: IncomingQueryParams) {
+  async feed(currentUserId, query?: IncomingQueryParams) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: currentUserId,
+      },
+      include: {
+        following: {
+          select: {
+            following: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Unauthorized');
+    }
+
+    const included = user.following.map((following) => following.following.id);
+
     const { where, orderBy, pagination } = queryHandler(
       queryParser<Post>(query),
     );
 
     const posts = await this.prisma.post.findMany({
-      where,
+      where: {
+        ...where,
+        authorId: {
+          in: [...included, user.id],
+        },
+      },
       orderBy,
       ...(pagination ? { take: pagination.limit, skip: pagination.skip } : {}),
       include: {

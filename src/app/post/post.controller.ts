@@ -21,8 +21,11 @@ export class PostController {
 
   @Auth()
   @Get('feed')
-  async feed(@Query() query: IncomingQueryParams) {
-    return await this.postService.feed(query);
+  async feed(
+    @UserId() currentUserId: string,
+    @Query() query: IncomingQueryParams,
+  ) {
+    return await this.postService.feed(currentUserId, query);
   }
 
   @Auth()
