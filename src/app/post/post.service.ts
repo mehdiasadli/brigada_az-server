@@ -97,7 +97,7 @@ export class PostService {
     };
   }
 
-  async feed(currentUserId, query?: IncomingQueryParams) {
+  async feed(currentUserId: string, query?: IncomingQueryParams) {
     const user = await this.prisma.user.findUnique({
       where: {
         id: currentUserId,
@@ -157,8 +157,12 @@ export class PostService {
     }
 
     const total = await this.prisma.post.count({
-      where,
-      orderBy,
+      where: {
+        ...where,
+        authorId: {
+          in: [...included, user.id],
+        },
+      },
     });
 
     return {
