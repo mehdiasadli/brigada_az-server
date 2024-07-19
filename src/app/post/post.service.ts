@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TCreatePostDto } from './dto/create-post.dto';
 import {
@@ -15,7 +19,7 @@ export class PostService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getPostById(postId: string) {
-    return await this.prisma.post.findUnique({
+    const post = await this.prisma.post.findUnique({
       where: {
         id: postId,
       },
@@ -43,6 +47,12 @@ export class PostService {
         },
       },
     });
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    return post;
   }
 
   async getUsersPosts(authorId: string, query?: IncomingQueryParams) {
