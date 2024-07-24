@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { publicUserForPost } from 'src/lib/utils/publicUser';
+import { UserService } from '../user/user.service';
 
 const TYPES = {
   USER: 'USER',
@@ -9,39 +9,18 @@ const TYPES = {
 
 @Injectable()
 export class CommonService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private userService: UserService,
+  ) {}
 
   async search(query?: string) {
     if (!query) return [];
 
-    const users = (
-      await this.prisma.user.findMany({
-        where: {
-          OR: [
-            {
-              username: {
-                contains: query,
-                mode: 'insensitive',
-              },
-            },
-            {
-              first_name: {
-                contains: query,
-                mode: 'insensitive',
-              },
-            },
-            {
-              last_name: {
-                contains: query,
-                mode: 'insensitive',
-              },
-            },
-          ],
-        },
-        select: publicUserForPost,
-        take: 5,
-      })
-    ).map((user) => ({ ...user, type: TYPES.USER }));
+    const users = (await this.userService.search(query)).map((user) => ({
+      ...user,
+      type: TYPES.USER,
+    }));
 
     const posts = (
       await this.prisma.post.findMany({

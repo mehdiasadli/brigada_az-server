@@ -30,12 +30,12 @@ export class UserController {
 
   @Auth()
   @Get('search')
-  async search(@Query('query') query: string) {
+  async search(@Query('query') query?: string) {
     return await this.userService.search(query);
   }
 
-  @Get(':id')
   @Auth()
+  @Get(':id')
   async findOne(@Param('id') id: string) {
     return await this.userService.findById(id);
   }

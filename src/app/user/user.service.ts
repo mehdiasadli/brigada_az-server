@@ -16,34 +16,25 @@ import { TChangePasswordDto } from './dto/change-password.dto';
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async search(query?: string) {
+  async search(
+    query?: string,
+    options: { take?: number; select?: any; fields?: (keyof User)[] } = {},
+  ) {
     if (!query) return [];
+    const {
+      take = 5,
+      select = publicUserForPost,
+      fields = ['username', 'first_name', 'last_name'],
+    } = options;
 
     return await this.prisma.user.findMany({
       where: {
-        OR: [
-          {
-            username: {
-              contains: query as any,
-              mode: 'insensitive',
-            },
-          },
-          {
-            first_name: {
-              contains: query as any,
-              mode: 'insensitive',
-            },
-          },
-          {
-            last_name: {
-              contains: query as any,
-              mode: 'insensitive',
-            },
-          },
-        ],
+        OR: fields.map((field) => ({
+          [field]: { contains: query as any, mode: 'insensitive' },
+        })),
       },
-      select: publicUserForPost,
-      take: 8,
+      select,
+      take,
     });
   }
 
