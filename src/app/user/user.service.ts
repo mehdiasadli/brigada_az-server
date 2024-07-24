@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
@@ -9,6 +10,7 @@ import { PrismaService } from 'src/app/prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { User } from '@prisma/client';
 import { publicUserForPost } from 'src/lib/utils/publicUser';
+import { TChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class UserService {
@@ -138,6 +140,30 @@ export class UserService {
     });
 
     return this.json(user);
+  }
+
+  async changePassword(
+    currentUserId: string,
+    changePasswordDto: TChangePasswordDto,
+  ) {
+    const user = await this.findById(currentUserId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!(await bcrypt.compare(changePasswordDto.password, user.password))) {
+      throw new BadRequestException('Invalid password');
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: currentUserId },
+      data: {
+        password: await this.hash(changePasswordDto.new_password),
+      },
+    });
+
+    return this.json(updated);
   }
 
   async update(id: string, updateUserDto: TUpdateUserDto) {
