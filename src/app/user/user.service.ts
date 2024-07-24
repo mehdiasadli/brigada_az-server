@@ -78,7 +78,7 @@ export class UserService {
     return user;
   }
 
-  async findById(id: string) {
+  async findById(id?: string) {
     return await this.prisma.user.findUnique({
       where: {
         id,
@@ -117,7 +117,7 @@ export class UserService {
       created_at: user.created_at,
       email: user.email,
       date_of_birth: user.date_of_birth,
-      positions: user.positions,
+      bio: user.bio,
     };
   }
 
