@@ -13,10 +13,14 @@ import {
 import { Post } from '@prisma/client';
 import { getPaginationInfo } from 'src/lib/utils/getPaginationInfo';
 import { publicUserForPost } from 'src/lib/utils/publicUser';
+import { MentionService } from '../mention/mention.service';
 
 @Injectable()
 export class PostService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private mentionService: MentionService,
+  ) {}
 
   async getPostById(postId: string) {
     const post = await this.prisma.post.findUnique({
@@ -26,6 +30,16 @@ export class PostService {
       include: {
         author: {
           select: publicUserForPost,
+        },
+        mentions: {
+          include: {
+            mentioned: {
+              select: {
+                username: true,
+                id: true,
+              },
+            },
+          },
         },
         likes: {
           include: {
@@ -70,6 +84,16 @@ export class PostService {
       include: {
         author: {
           select: publicUserForPost,
+        },
+        mentions: {
+          include: {
+            mentioned: {
+              select: {
+                username: true,
+                id: true,
+              },
+            },
+          },
         },
         comments: {
           select: {
@@ -144,6 +168,16 @@ export class PostService {
         author: {
           select: publicUserForPost,
         },
+        mentions: {
+          include: {
+            mentioned: {
+              select: {
+                username: true,
+                id: true,
+              },
+            },
+          },
+        },
         comments: {
           select: {
             id: true,
@@ -182,12 +216,18 @@ export class PostService {
   }
 
   async create(createPostDto: TCreatePostDto, currentUserId: string) {
-    return await this.prisma.post.create({
+    const { mentions, ...rest } = createPostDto;
+
+    const post = await this.prisma.post.create({
       data: {
-        ...createPostDto,
+        ...rest,
         authorId: currentUserId,
       },
     });
+
+    await this.mentionService.addMentions(post, mentions);
+
+    return post;
   }
 
   async delete(postId: string) {
