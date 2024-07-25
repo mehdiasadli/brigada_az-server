@@ -1,4 +1,3 @@
-import { Position } from '@prisma/client';
 import { regexes } from 'src/lib/resources/regex';
 import { z } from 'zod';
 
@@ -14,18 +13,6 @@ const UsernameDto = z
     regexes.username,
     'Username can only include english letters, digits and "_" symbol',
   );
-
-const PositionsDto = z
-  .array(
-    z.nativeEnum(Position, {
-      errorMap() {
-        return {
-          message: `Only valid position values are ${Object.values(Position).join(', ')}`,
-        };
-      },
-    }),
-  )
-  .max(4, 'Max limit for positions is 4');
 
 export const NameDto = (name: string) =>
   z
@@ -48,7 +35,6 @@ export const CreateUserDto = z.object({
   password: PasswordDto,
   first_name: NameDto('First'),
   last_name: NameDto('Last'),
-  positions: PositionsDto,
   date_of_birth: DateOfBirthDto,
 });
 
