@@ -8,8 +8,8 @@ import { UserModule } from './user/user.module';
 import { PostModule } from './post/post.module';
 import { LikeModule } from './like/like.module';
 import { CommentModule } from './comment/comment.module';
-import { CommonModule } from './common/common.module';
 import { FollowshipModule } from './followship/followship.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -17,7 +17,7 @@ import { FollowshipModule } from './followship/followship.module';
       isGlobal: true,
     }),
     PrismaModule,
-    CommonModule,
+    CloudinaryModule,
     AuthModule,
     UserModule,
     PostModule,

@@ -15,6 +15,7 @@ model User {
   email         String   @unique
   password      String
   avatar        String?
+  avatar_id     String?
   bio           String?
   date_of_birth DateTime
 

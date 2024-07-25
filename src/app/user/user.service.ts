@@ -11,10 +11,66 @@ import * as bcrypt from 'bcryptjs';
 import { User } from '@prisma/client';
 import { publicUserForPost } from 'src/lib/utils/publicUser';
 import { TChangePasswordDto } from './dto/change-password.dto';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
 @Injectable()
 export class UserService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private cloudinaryService: CloudinaryService,
+  ) {}
+
+  async uploadAvatar(file: Express.Multer.File, currentUserId: string) {
+    const user = await this.findById(currentUserId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.avatar && user.avatar_id) {
+      await this.deleteAvatar(user.avatar_id);
+    }
+
+    const result = await this.cloudinaryService.uploadImage(file);
+
+    const updated = await this.prisma.user.update({
+      where: {
+        id: currentUserId,
+      },
+      data: {
+        avatar: result.secure_url,
+        avatar_id: result.public_id,
+      },
+    });
+
+    return this.json(updated);
+  }
+
+  async deleteAvatar(currentUserId: string) {
+    const user = await this.findById(currentUserId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.avatar === null || user.avatar_id === null) {
+      return this.json(user);
+    }
+
+    const [, updated] = await Promise.all([
+      await this.cloudinaryService.deleteImage(user.avatar_id),
+      await this.prisma.user.update({
+        where: {
+          id: currentUserId,
+        },
+        data: {
+          avatar: null,
+          avatar_id: null,
+        },
+      }),
+    ]);
+
+    return this.json(updated);
+  }
 
   async search(
     query?: string,
@@ -54,11 +110,6 @@ export class UserService {
             posts: true,
             followed_by: true,
             following: true,
-            events: true,
-            polls: true,
-            games: true,
-            comments: true,
-            likes: true,
           },
         },
       },
@@ -68,7 +119,9 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
 
-    return user;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...result } = user;
+    return result;
   }
 
   async findById(id?: string) {
